@@ -1,0 +1,292 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PyLearn - Free 30-Day Python Course</title>
+  <meta name="description" content="PyLearn offers a free 30-day Python course from basics to advanced topics. Learn Python hands-on with copyable and executable code!">
+  <meta name="keywords" content="learn Python free, Python course, Python tutorials, beginner Python, advanced Python, Python programming">
+  <meta name="author" content="Your Name">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Course",
+    "name": "PyLearn 30-Day Python Course",
+    "description": "A free 30-day Python course covering basics to advanced topics with hands-on coding.",
+    "provider": {
+      "@type": "Organization",
+      "name": "PyLearn"
+    }
+  }
+  </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <style>
+    body { background-color: #0d1117; color: #e6edf3; font-family: 'Inter', sans-serif; }
+    .navbar { background: linear-gradient(90deg, #1a1f2e, #2a2f3e); }
+    .hero { background: url('https://source.unsplash.com/random/1920x1080/?python') no-repeat center/cover; }
+    .btn { transition: transform 0.3s ease; }
+    .btn:hover { transform: scale(1.05); }
+    .chapter-card { transition: all 0.3s ease; }
+    .chapter-card:hover { background: #1f252c; }
+    .progress-bar { transition: width 0.3s ease; }
+    .error { color: red; text-align: center; padding: 20px; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script>
+    const { useState, useEffect } = React;
+
+    const App = () => {
+      const [completedChapters, setCompletedChapters] = useState([]);
+      const [showFeedback, setShowFeedback] = useState(false);
+      const [feedback, setFeedback] = useState('');
+      const [chapter, setChapter] = useState('Chapter 1');
+      const [feedbackMessage, setFeedbackMessage] = useState('');
+
+      useEffect(() => {
+        const saved = JSON.parse(localStorage.getItem('completedChapters') || '[]');
+        setCompletedChapters(saved);
+      }, []);
+
+      const saveFeedback = () => {
+        try {
+          let feedbacks = JSON.parse(localStorage.getItem('feedbacks') || '[]');
+          feedbacks.push({ id: Date.now(), text: feedback, chapter });
+          localStorage.setItem('feedbacks', JSON.stringify(feedbacks));
+          setFeedback('');
+          setFeedbackMessage('Feedback saved! Check Developer Tools → Application → Local Storage.');
+          setTimeout(() => setFeedbackMessage(''), 3000);
+          setShowFeedback(false);
+        } catch (e) {
+          setFeedbackMessage('Error saving feedback.');
+        }
+      };
+
+      const chapters = [
+        { id: 1, title: "Introduction to Python and Setup", description: "Install Python and write your first program.", link: "./chapter1.html" },
+        { id: 2, title: "Variables and Data Types", description: "Learn integers, floats, strings, and booleans.", link: "./chapter2.html" },
+        { id: 3, title: "Basic Operations and Input/Output", description: "Perform arithmetic and handle user input.", link: "#" },
+        { id: 4, title: "Conditional Statements", description: "Use if, elif, and else for decision-making.", link: "#" },
+        { id: 5, title: "Loops: for and while", description: "Master iteration with for and while loops.", link: "#" },
+        { id: 6, title: "Lists and List Operations", description: "Create, modify, and slice lists.", link: "#" },
+        { id: 7, title: "Tuples and Sets", description: "Work with immutable tuples and unique sets.", link: "#" },
+        { id: 8, title: "Dictionaries", description: "Use key-value pairs and dictionary methods.", link: "#" },
+        { id: 9, title: "Functions and Parameters", description: "Define functions with arguments and return values.", link: "#" },
+        { id: 10, title: "Scope and Lifetime of Variables", description: "Understand local, global, and nonlocal variables.", link: "#" },
+        { id: 11, title: "Modules and Packages", description: "Import and create Python modules and packages.", link: "#" },
+        { id: 12, title: "File Handling", description: "Read and write text files and CSVs.", link: "#" },
+        { id: 13, title: "Error and Exception Handling", description: "Handle errors with try, except, and finally.", link: "#" },
+        { id: 14, title: "String Manipulation", description: "Format strings and use basic regex.", link: "#" },
+        { id: 15, title: "List Comprehensions", description: "Create lists concisely with comprehensions.", link: "#" },
+        { id: 16, title: "Lambda Functions and Map/Filter", description: "Use anonymous functions and functional programming.", link: "#" },
+        { id: 17, title: "Object-Oriented Programming: Classes and Objects", description: "Define classes and create objects.", link: "#" },
+        { id: 18, title: "Inheritance and Polymorphism", description: "Extend classes and override methods.", link: "#" },
+        { id: 19, title: "Encapsulation and Properties", description: "Use private attributes and getters/setters.", link: "#" },
+        { id: 20, title: "Iterators and Generators", description: "Create custom iterators and use yield.", link: "#" },
+        { id: 21, title: "Decorators", description: "Apply function and class decorators.", link: "#" },
+        { id: 22, title: "Working with Dates and Times", description: "Use the datetime module for date handling.", link: "#" },
+        { id: 23, title: "Regular Expressions", description: "Master regex for advanced pattern matching.", link: "#" },
+        { id: 24, title: "Web Scraping with BeautifulSoup", description: "Scrape websites and parse HTML.", link: "#" },
+        { id: 25, title: "APIs and Requests", description: "Fetch data from APIs and handle JSON.", link: "#" },
+        { id: 26, title: "Data Analysis with Pandas", description: "Use DataFrames for basic data analysis.", link: "#" },
+        { id: 27, title: "Visualization with Matplotlib", description: "Create charts and graphs.", link: "#" },
+        { id: 28, title: "NumPy for Numerical Computing", description: "Work with arrays and matrix operations.", link: "#" },
+        { id: 29, title: "Introduction to Machine Learning with Scikit-Learn", description: "Build basic ML models.", link: "#" },
+        { id: 30, title: "Building a Simple Web App with Flask", description: "Create a web server with routes.", link: "#" }
+      ];
+
+      try {
+        return React.createElement(
+          'div',
+          { className: 'min-h-screen flex flex-col' },
+          [
+            // Navbar
+            React.createElement(
+              'nav',
+              { className: 'navbar py-4 px-6 flex justify-between items-center' },
+              [
+                React.createElement('h1', { className: 'text-2xl font-bold text-white' }, 'PyLearn'),
+                React.createElement(
+                  'div',
+                  { className: 'space-x-4' },
+                  [
+                    React.createElement('a', { href: './chapter1.html', className: 'text-gray-300 hover:text-white' }, 'Chapter 1'),
+                    React.createElement('a', { href: './chapter2.html', className: 'text-gray-300 hover:text-white' }, 'Chapter 2'),
+                    React.createElement('a', { href: '#', className: 'text-gray-300 hover:text-white opacity-50 cursor-not-allowed' }, 'More Chapters'),
+                    React.createElement('button', { onClick: () => setShowFeedback(true), className: 'text-gray-300 hover:text-white' }, 'Feedback'),
+                    React.createElement('a', { href: '#about', className: 'text-gray-300 hover:text-white' }, 'About')
+                  ]
+                )
+              ]
+            ),
+            // Feedback Form
+            showFeedback && React.createElement(
+              'div',
+              { className: 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center' },
+              React.createElement(
+                'div',
+                { className: 'bg-gray-800 p-6 rounded-lg max-w-md w-full' },
+                [
+                  React.createElement('h3', { className: 'text-xl font-semibold mb-4' }, 'Submit Feedback'),
+                  React.createElement(
+                    'select',
+                    {
+                      className: 'w-full p-2 mb-4 bg-gray-700 rounded',
+                      value: chapter,
+                      onChange: e => setChapter(e.target.value)
+                    },
+                    [
+                      React.createElement('option', null, 'Chapter 1'),
+                      React.createElement('option', null, 'Chapter 2')
+                    ]
+                  ),
+                  React.createElement('textarea', {
+                    className: 'w-full p-2 mb-4 bg-gray-700 rounded',
+                    rows: 4,
+                    placeholder: 'Your feedback...',
+                    value: feedback,
+                    onChange: e => setFeedback(e.target.value)
+                  }),
+                  React.createElement(
+                    'div',
+                    { className: 'flex justify-end space-x-2' },
+                    [
+                      React.createElement('button', {
+                        className: 'btn bg-gray-600 hover:bg-gray-700 text-white py-2 px-4 rounded',
+                        onClick: () => setShowFeedback(false)
+                      }, 'Cancel'),
+                      React.createElement('button', {
+                        className: 'btn bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded',
+                        onClick: saveFeedback
+                      }, 'Submit')
+                    ]
+                  ),
+                  feedbackMessage && React.createElement('p', { className: 'mt-2 text-green-400' }, feedbackMessage)
+                ]
+              )
+            ),
+            // Hero Section
+            React.createElement(
+              'div',
+              { className: 'hero flex flex-col items-center justify-center text-center py-24 px-4' },
+              [
+                React.createElement('h2', { className: 'text-5xl font-extrabold mb-4' }, 'Learn Python in 30 Days'),
+                React.createElement('p', { className: 'text-lg mb-6 max-w-2xl' }, 'PyLearn offers a free, hands-on Python course with executable code. Master coding from basics to advanced in 30 days!'),
+                React.createElement('a', { href: './chapter1.html', className: 'btn bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-full' }, 'Start Learning')
+              ]
+            ),
+            // Progress Tracker
+            React.createElement(
+              'div',
+              { className: 'py-8 px-4 max-w-3xl mx-auto' },
+              [
+                React.createElement('h3', { className: 'text-2xl font-semibold mb-4' }, 'Your Progress'),
+                React.createElement(
+                  'div',
+                  { className: 'bg-gray-700 h-4 rounded-full overflow-hidden' },
+                  React.createElement('div', {
+                    className: 'bg-blue-600 h-full progress-bar',
+                    style: { width: `${(completedChapters.length / 30) * 100}%` }
+                  })
+                ),
+                React.createElement('p', { className: 'mt-2' }, `${completedChapters.length}/30 chapters completed`),
+                completedChapters.length > 0 && React.createElement(
+                  'ul',
+                  { className: 'mt-2 list-disc list-inside' },
+                  completedChapters.map(ch => React.createElement('li', { key: ch }, `Chapter ${ch}`))
+                )
+              ]
+            ),
+            // Chapters Section
+            React.createElement(
+              'div',
+              { id: 'chapters', className: 'py-12 px-4' },
+              [
+                React.createElement('h3', { className: 'text-3xl font-semibold text-center mb-8' }, '30-Day Python Course Curriculum'),
+                React.createElement(
+                  'div',
+                  { className: 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-w-6xl mx-auto' },
+                  chapters.map(chapter => React.createElement(
+                    'div',
+                    { key: chapter.id, className: 'chapter-card bg-gray-800 p-6 rounded-lg shadow-lg' },
+                    [
+                      React.createElement(
+                        'h4',
+                        { className: 'text-xl font-semibold mb-2' },
+                        chapter.link !== '#' ? React.createElement('a', { href: chapter.link, className: 'hover:text-blue-400' }, chapter.title) : React.createElement('span', { className: 'text-gray-500' }, `${chapter.title} (Coming Soon)`)
+                      ),
+                      React.createElement('p', { className: 'text-gray-400' }, chapter.description)
+                    ]
+                  ))
+                )
+              ]
+            ),
+            // About Section
+            React.createElement(
+              'div',
+              { id: 'about', className: 'py-12 px-4 bg-gray-900' },
+              [
+                React.createElement('h3', { className: 'text-3xl font-semibold text-center mb-8' }, 'About PyLearn'),
+                React.createElement('p', { className: 'text-lg max-w-3xl mx-auto text-center' }, 'PyLearn is a free platform to master Python through 30 daily tutorials. Run code in your browser, track your progress, and share feedback to join our growing community!')
+              ]
+            ),
+            // Footer
+            React.createElement(
+              'footer',
+              { className: 'py-6 px-4 text-center bg-gray-900' },
+              React.createElement('p', null, '© 2025 PyLearn. Built with ❤️ for Python learners.')
+            )
+          ]
+        );
+      } catch (e) {
+        return React.createElement('div', { className: 'error' }, 'Error loading page. Please refresh or check your internet connection.');
+      }
+    };
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(React.createElement(App));
+  </script>
+</body>
+</html>
